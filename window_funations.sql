@@ -43,3 +43,25 @@ SELECT * FROM CTE1
 WHERE drank<=2;
 
 
+WITH top_market_cte2 AS(
+ WITH top_market_cte AS(
+ SELECT
+	cus.market,
+	cus.region,
+    ROUND(SUM(sa.sold_quantity * g.gross_price)/1000000,2) AS gross_sales_in_mlns
+FROM dim_customer cus 
+JOIN fact_sales_monthly sa ON
+cus.customer_code = sa.customer_code
+JOIN fact_gross_price g ON
+g.product_code=sa.product_code
+WHERE sa.fiscal_year=2021
+GROUP BY cus.market,cus.region)
+SELECT
+	*,
+    rank() OVER(partition by region order by gross_sales_in_mlns desc) AS rnk
+FROM top_market_cte)
+SELECT * FROM top_market_cte2
+WHERE rnk<=2;
+
+
+
